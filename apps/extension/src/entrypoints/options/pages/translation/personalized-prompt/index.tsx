@@ -1,6 +1,6 @@
 import type { TranslatePromptObj } from '@/types/config/translate'
 import { i18n } from '#imports'
-import { Icon } from '@iconify/react'
+import { Icon } from '@iconify/react/dist/iconify.js'
 import { Button } from '@repo/ui/components/button'
 import {
   Card,
@@ -13,6 +13,7 @@ import {
 import { Checkbox } from '@repo/ui/components/checkbox'
 import { Input } from '@repo/ui/components/input'
 import { Label } from '@repo/ui/components/label'
+import { Separator } from '@repo/ui/components/separator'
 import {
   Sheet,
   SheetClose,
@@ -22,6 +23,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@repo/ui/components/sheet'
+import { cn } from '@repo/ui/lib/utils'
 import { useAtom, useAtomValue } from 'jotai'
 import { useState } from 'react'
 import { QuickInsertableTextarea } from '@/components/ui/insertable-textarea'
@@ -47,18 +49,59 @@ function PromptList() {
   const promptsConfig = translateConfig.promptsConfig
   const patterns = promptsConfig.patterns
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>([])
+  const [isExportMode, setIsExportMode] = useState(false)
 
   return (
     <section className="w-full">
       <header className="w-full text-end mb-4 gap-3 flex justify-end">
-        <ImportPrompts />
-        <ExportPrompts selectedPrompts={selectedPrompts} />
-        <ConfigurePrompt />
+        {
+          isExportMode
+            ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsExportMode(false)
+                      setSelectedPrompts([])
+                    }}
+                  >
+                    <Icon icon="tabler:x" className="size-4" />
+                    {i18n.t('options.translation.personalizedPrompts.exportPrompt.cancel')}
+                  </Button>
+                  <ExportPrompts
+                    selectedPrompts={selectedPrompts}
+                    setSelectedPrompts={setSelectedPrompts}
+                    setIsExportMode={setIsExportMode}
+                  />
+                </>
+              )
+            : (
+                <>
+                  <ImportPrompts />
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsExportMode(true)}
+                    disabled={patterns.length === 0}
+                  >
+                    <Icon icon="tabler:file-upload" className="size-4" />
+                    {i18n.t('options.translation.personalizedPrompts.export')}
+                  </Button>
+                  <ConfigurePrompt />
+                </>
+              )
+        }
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-96 overflow-auto p-2">
         {
           patterns.map(pattern => (
-            <Card className="h-fit gap-4" key={pattern.id}>
+            <Card
+              className={cn(
+                'h-fit gap-3 pb-3',
+                // for highlight selected card in export mode
+                'has-[[aria-checked=true]]:border-primary has-[[aria-checked=true]]:bg-primary/5 dark:has-[[aria-checked=true]]:border-primary/70 dark:has-[[aria-checked=true]]:bg-primary/10',
+              )}
+              key={pattern.id}
+            >
               <CardHeader className="grid-rows-1">
                 <CardTitle className="leading-relaxed w-full min-w-0">
                   {
@@ -66,18 +109,24 @@ function PromptList() {
                       ? i18n.t('options.translation.personalizedPrompts.default')
                       : (
                           <div className="leading-relaxed gap-3 flex items-center w-full">
-                            <Checkbox
-                              id={`translate-prompt-${pattern.id}`}
-                              checked={selectedPrompts.includes(pattern.id)}
-                              onCheckedChange={(checked) => {
-                                setSelectedPrompts((prev) => {
-                                  return checked
-                                    ? [...prev, pattern.id]
-                                    : prev.filter(id => id !== pattern.id)
-                                })
-                              }}
-                            >
-                            </Checkbox>
+                            {
+                              isExportMode && !isDefaultPrompt(pattern.id)
+                                ? (
+                                    <Checkbox
+                                      id={`translate-prompt-${pattern.id}`}
+                                      checked={selectedPrompts.includes(pattern.id)}
+                                      onCheckedChange={(checked) => {
+                                        setSelectedPrompts((prev) => {
+                                          return checked
+                                            ? [...prev, pattern.id]
+                                            : prev.filter(id => id !== pattern.id)
+                                        })
+                                      }}
+                                    >
+                                    </Checkbox>
+                                  )
+                                : null
+                            }
                             <span className="flex-1 min-w-0 truncate" title={pattern.name}>
                               {pattern.name}
                             </span>
@@ -85,18 +134,21 @@ function PromptList() {
                         )
                   }
                 </CardTitle>
-                <CardAction className="leading-relaxed">
-                  {
-                    !isDefaultPrompt(pattern.id)
-                    && <DeletePrompt originPrompt={pattern} />
-                  }
-                </CardAction>
               </CardHeader>
               <CardContent className="flex flex-col gap-4 h-16">
                 <p className="text-sm text-ellipsis whitespace-pre-wrap line-clamp-3">{pattern.prompt}</p>
               </CardContent>
-              <CardFooter className="w-full flex justify-end mt-8">
-                <ConfigurePrompt originPrompt={pattern} />
+              <Separator />
+              <CardFooter className="w-full flex justify-between px-4 items-center">
+                <CardAction>
+                  {
+                    !isDefaultPrompt(pattern.id)
+                    && <DeletePrompt originPrompt={pattern} disabled={isExportMode} className="text-destructive" />
+                  }
+                </CardAction>
+                <CardAction>
+                  <ConfigurePrompt originPrompt={pattern} disabled={isExportMode} />
+                </CardAction>
               </CardFooter>
             </Card>
           ))
@@ -106,7 +158,14 @@ function PromptList() {
   )
 }
 
-function ConfigurePrompt({ originPrompt }: { originPrompt?: TranslatePromptObj }) {
+function ConfigurePrompt({
+  originPrompt,
+  className,
+  ...props
+}: {
+  originPrompt?: TranslatePromptObj
+  className?: string
+} & React.ComponentProps<'button'>) {
   const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
 
   const inEdit = !!originPrompt
@@ -155,12 +214,12 @@ function ConfigurePrompt({ originPrompt }: { originPrompt?: TranslatePromptObj }
         {
           inEdit
             ? (
-                <Button className="size-8 rounded-full">
+                <Button variant="ghost" className={cn('size-8', className)} {...props}>
                   <Icon icon="tabler:pencil" className="size-4" />
                 </Button>
               )
             : (
-                <Button>
+                <Button className={className} {...props}>
                   <Icon icon="tabler:plus" className="size-4" />
                   {i18n.t('options.translation.personalizedPrompts.addPrompt')}
                 </Button>

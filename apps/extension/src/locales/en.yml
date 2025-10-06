@@ -201,6 +201,9 @@ options:
         description: Confirm delete prompt
         confirm: Confirm
         cancel: Cancel
+      exportPrompt:
+        exportSelected: Export Selected
+        cancel: Cancel
     translationStyle:
       title: Translation Display Style
       description: Distinguish display styles for translation results (see sample for specific style demonstrations)

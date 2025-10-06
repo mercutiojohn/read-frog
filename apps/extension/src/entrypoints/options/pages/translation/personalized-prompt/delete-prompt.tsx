@@ -7,7 +7,14 @@ import { useAtom } from 'jotai'
 import { configFieldsAtomMap } from '@/utils/atoms/config'
 import { DEFAULT_TRANSLATE_PROMPT_ID } from '@/utils/constants/prompt'
 
-export function DeletePrompt({ originPrompt }: { originPrompt: TranslatePromptObj }) {
+export function DeletePrompt({
+  originPrompt,
+  className,
+  ...props
+}: {
+  originPrompt: TranslatePromptObj
+  className?: string
+} & React.ComponentProps<'button'>) {
   const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
   const { patterns, prompt } = translateConfig.promptsConfig
   const deletePrompt = () => {
@@ -22,8 +29,8 @@ export function DeletePrompt({ originPrompt }: { originPrompt: TranslatePromptOb
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger>
-        <Button variant="ghost" size="icon">
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" className={className} {...props}>
           <Icon icon="tabler:trash" className="size-4"></Icon>
         </Button>
       </AlertDialogTrigger>

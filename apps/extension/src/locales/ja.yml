@@ -199,6 +199,9 @@ options:
         description: このプロンプトを削除しますか
         confirm: 確認
         cancel: キャンセル
+      exportPrompt:
+        exportSelected: 選択したものをエクスポート
+        cancel: キャンセル
     translationStyle:
       title: 翻訳表示スタイル
       description: 翻訳結果の表示スタイルを区別（具体的な表示例はサンプルを参照）

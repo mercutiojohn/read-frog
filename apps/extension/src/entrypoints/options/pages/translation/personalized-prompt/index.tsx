@@ -13,6 +13,7 @@ import {
 import { Checkbox } from '@repo/ui/components/checkbox'
 import { Input } from '@repo/ui/components/input'
 import { Label } from '@repo/ui/components/label'
+import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group'
 import { Separator } from '@repo/ui/components/separator'
 import {
   Sheet,
@@ -45,11 +46,21 @@ export function PersonalizedPrompts() {
 }
 
 function PromptList() {
-  const translateConfig = useAtomValue(configFieldsAtomMap.translate)
+  const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
   const promptsConfig = translateConfig.promptsConfig
   const patterns = promptsConfig.patterns
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>([])
   const [isExportMode, setIsExportMode] = useState(false)
+  const currentPromptId = promptsConfig.prompt
+
+  const setCurrentPromptId = (value: string) => {
+    void setTranslateConfig({
+      promptsConfig: {
+        ...promptsConfig,
+        prompt: value,
+      },
+    })
+  }
 
   return (
     <section className="w-full">
@@ -91,51 +102,70 @@ function PromptList() {
               )
         }
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-96 overflow-auto p-2">
+      <RadioGroup
+        value={currentPromptId}
+        onValueChange={value => setCurrentPromptId(value)}
+        aria-label={i18n.t('options.translation.personalizedPrompts.title')}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-96 overflow-auto p-2 select-none"
+      >
         {
           patterns.map(pattern => (
             <Card
               className={cn(
-                'h-fit gap-3 pb-3',
-                // for highlight selected card in export mode
+                'h-full gap-3 pb-3',
+                // for highlight checked card in export mode
                 'has-[[aria-checked=true]]:border-primary has-[[aria-checked=true]]:bg-primary/5 dark:has-[[aria-checked=true]]:border-primary/70 dark:has-[[aria-checked=true]]:bg-primary/10',
               )}
               key={pattern.id}
             >
               <CardHeader className="grid-rows-1">
-                <CardTitle className="leading-relaxed w-full min-w-0">
-                  {
-                    isDefaultPrompt(pattern.id)
-                      ? i18n.t('options.translation.personalizedPrompts.default')
-                      : (
-                          <div className="leading-relaxed gap-3 flex items-center w-full">
-                            {
-                              isExportMode && !isDefaultPrompt(pattern.id)
-                                ? (
-                                    <Checkbox
-                                      id={`translate-prompt-${pattern.id}`}
-                                      checked={selectedPrompts.includes(pattern.id)}
-                                      onCheckedChange={(checked) => {
-                                        setSelectedPrompts((prev) => {
-                                          return checked
-                                            ? [...prev, pattern.id]
-                                            : prev.filter(id => id !== pattern.id)
-                                        })
-                                      }}
-                                    >
-                                    </Checkbox>
-                                  )
-                                : null
-                            }
-                            <span className="flex-1 min-w-0 truncate" title={pattern.name}>
-                              {pattern.name}
-                            </span>
-                          </div>
+                <CardTitle className="w-full min-w-0">
+                  <div className="leading-relaxed gap-3 flex items-center w-full">
+                    {isExportMode
+                      ? (
+                          !isDefaultPrompt(pattern.id) && (
+                            <Checkbox
+                              id={`translate-prompt-check-${pattern.id}`}
+                              checked={selectedPrompts.includes(pattern.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedPrompts((prev) => {
+                                  return checked
+                                    ? [...prev, pattern.id]
+                                    : prev.filter(id => id !== pattern.id)
+                                })
+                              }}
+                            />
+                          )
                         )
-                  }
+                      : (
+                          <RadioGroupItem
+                            id={`translate-prompt-radio-${pattern.id}`}
+                            value={pattern.id}
+                          />
+                        )}
+
+                    <Label
+                      htmlFor={`translate-prompt-${isExportMode ? 'check' : 'radio'}-${pattern.id}`}
+                      className="flex-1 min-w-0 truncate"
+                      title={pattern.name}
+                    >
+                      {isDefaultPrompt(pattern.id)
+                        ? i18n.t('options.translation.personalizedPrompts.default')
+                        : pattern.name}
+                    </Label>
+                  </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-4 h-16">
+              <CardContent
+                className="flex flex-col gap-4 h-16 flex-1"
+                onClick={() => !isExportMode
+                  ? setCurrentPromptId(pattern.id)
+                  : setSelectedPrompts((prev) => {
+                      return prev.includes(pattern.id)
+                        ? prev.filter(id => id !== pattern.id)
+                        : [...prev, pattern.id]
+                    })}
+              >
                 <p className="text-sm text-ellipsis whitespace-pre-wrap line-clamp-3">{pattern.prompt}</p>
               </CardContent>
               <Separator />
@@ -153,7 +183,7 @@ function PromptList() {
             </Card>
           ))
         }
-      </div>
+      </RadioGroup>
     </section>
   )
 }

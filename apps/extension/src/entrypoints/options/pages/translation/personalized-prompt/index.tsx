@@ -25,7 +25,7 @@ import {
   SheetTrigger,
 } from '@repo/ui/components/sheet'
 import { cn } from '@repo/ui/lib/utils'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom } from 'jotai'
 import { useState } from 'react'
 import { QuickInsertableTextarea } from '@/components/ui/insertable-textarea'
 import { configFieldsAtomMap } from '@/utils/atoms/config'

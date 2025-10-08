@@ -119,7 +119,7 @@ function PromptGrid({
   const [selectedPrompts, setSelectedPrompts] = useAtom(selectedPromptsToExportAtom)
   const isExportMode = useAtomValue(isExportPromptModeAtom)
 
-  const handleCardClick = (pattern: typeof patterns[number]) => {
+  async function handleCardClick(pattern: typeof patterns[number]) {
     if (!isExportMode) {
       setCurrentPromptId(pattern.id)
     }
@@ -228,7 +228,14 @@ function ConfigurePrompt({
 
   const inEdit = !!originPrompt
 
-  const [prompt, setPrompt] = useState<TranslatePromptObj>(originPrompt ?? { id: crypto.randomUUID(), name: '', prompt: '' })
+  const defaultPrompt = { id: crypto.randomUUID(), name: '', prompt: '' }
+  const initialPrompt = originPrompt ?? defaultPrompt
+
+  const [prompt, setPrompt] = useState<TranslatePromptObj>(initialPrompt)
+
+  const resetPrompt = () => {
+    setPrompt(originPrompt ?? defaultPrompt)
+  }
 
   const promptName = isDefaultPrompt(prompt.id)
     ? i18n.t('options.translation.personalizedPrompts.default')
@@ -267,7 +274,12 @@ function ConfigurePrompt({
   }
 
   return (
-    <Sheet>
+    <Sheet onOpenChange={(open) => {
+      if (open) {
+        resetPrompt()
+      }
+    }}
+    >
       <SheetTrigger asChild>
         {
           inEdit

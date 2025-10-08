@@ -2,8 +2,7 @@ import { i18n } from '#imports'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { Button } from '@repo/ui/components/button'
 import { useAtom, useAtomValue } from 'jotai'
-import { configFieldsAtomMap } from '@/utils/atoms/config'
-import { isExportPromptModeAtom, selectedPromptsToExportAtom } from './atoms'
+import { configFieldsAtomMap, isExportPromptModeAtom, selectedPromptsToExportAtom } from '@/utils/atoms/config'
 import { downloadJSONFile } from './utils/prompt-file'
 
 export function ExportPrompts() {

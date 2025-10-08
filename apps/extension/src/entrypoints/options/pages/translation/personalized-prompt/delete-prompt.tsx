@@ -4,9 +4,8 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@repo/ui/components/alert-dialog'
 import { Button } from '@repo/ui/components/button'
 import { useAtom, useAtomValue } from 'jotai'
-import { configFieldsAtomMap } from '@/utils/atoms/config'
+import { configFieldsAtomMap, isExportPromptModeAtom } from '@/utils/atoms/config'
 import { DEFAULT_TRANSLATE_PROMPT_ID } from '@/utils/constants/prompt'
-import { isExportPromptModeAtom } from './atoms'
 
 export function DeletePrompt({
   originPrompt,

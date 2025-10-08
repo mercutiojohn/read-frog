@@ -25,10 +25,10 @@ import {
   SheetTrigger,
 } from '@repo/ui/components/sheet'
 import { cn } from '@repo/ui/lib/utils'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { useState } from 'react'
 import { QuickInsertableTextarea } from '@/components/ui/insertable-textarea'
-import { configFieldsAtomMap } from '@/utils/atoms/config'
+import { configFieldsAtomMap, isExportPromptModeAtom, selectedPromptsToExportAtom } from '@/utils/atoms/config'
 import { DEFAULT_TRANSLATE_PROMPT_ID, getTokenCellText, TOKENS } from '@/utils/constants/prompt'
 import { ConfigCard } from '../../../components/config-card'
 import { DeletePrompt } from './delete-prompt'
@@ -49,8 +49,8 @@ function PromptList() {
   const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
   const promptsConfig = translateConfig.promptsConfig
   const patterns = promptsConfig.patterns
-  const [selectedPrompts, setSelectedPrompts] = useState<string[]>([])
-  const [isExportMode, setIsExportMode] = useState(false)
+  const [_, setSelectedPrompts] = useAtom(selectedPromptsToExportAtom)
+  const [isExportMode, setIsExportMode] = useAtom(isExportPromptModeAtom)
   const currentPromptId = promptsConfig.prompt
 
   const setCurrentPromptId = (value: string) => {
@@ -64,7 +64,7 @@ function PromptList() {
 
   return (
     <section className="w-full">
-      <header className="w-full text-end mb-4 gap-3 flex justify-end">
+      <div className="w-full text-end mb-4 gap-3 flex justify-end">
         {
           isExportMode
             ? (
@@ -79,11 +79,7 @@ function PromptList() {
                     <Icon icon="tabler:x" className="size-4" />
                     {i18n.t('options.translation.personalizedPrompts.exportPrompt.cancel')}
                   </Button>
-                  <ExportPrompts
-                    selectedPrompts={selectedPrompts}
-                    setSelectedPrompts={setSelectedPrompts}
-                    setIsExportMode={setIsExportMode}
-                  />
+                  <ExportPrompts />
                 </>
               )
             : (
@@ -101,90 +97,121 @@ function PromptList() {
                 </>
               )
         }
-      </header>
-      <RadioGroup
-        value={currentPromptId}
-        onValueChange={value => setCurrentPromptId(value)}
-        aria-label={i18n.t('options.translation.personalizedPrompts.title')}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-96 overflow-auto p-2 select-none"
-      >
-        {
-          patterns.map(pattern => (
-            <Card
-              className={cn(
-                'h-full gap-3 pb-3',
-                // for highlight checked card in export mode
-                'has-[[aria-checked=true]]:border-primary has-[[aria-checked=true]]:bg-primary/5 dark:has-[[aria-checked=true]]:border-primary/70 dark:has-[[aria-checked=true]]:bg-primary/10',
-              )}
-              key={pattern.id}
-            >
-              <CardHeader className="grid-rows-1">
-                <CardTitle className="w-full min-w-0">
-                  <div className="leading-relaxed gap-3 flex items-center w-full">
-                    {isExportMode
-                      ? (
-                          !isDefaultPrompt(pattern.id) && (
-                            <Checkbox
-                              id={`translate-prompt-check-${pattern.id}`}
-                              checked={selectedPrompts.includes(pattern.id)}
-                              onCheckedChange={(checked) => {
-                                setSelectedPrompts((prev) => {
-                                  return checked
-                                    ? [...prev, pattern.id]
-                                    : prev.filter(id => id !== pattern.id)
-                                })
-                              }}
-                            />
-                          )
-                        )
-                      : (
-                          <RadioGroupItem
-                            id={`translate-prompt-radio-${pattern.id}`}
-                            value={pattern.id}
-                          />
-                        )}
-
-                    <Label
-                      htmlFor={`translate-prompt-${isExportMode ? 'check' : 'radio'}-${pattern.id}`}
-                      className="flex-1 min-w-0 truncate"
-                      title={pattern.name}
-                    >
-                      {isDefaultPrompt(pattern.id)
-                        ? i18n.t('options.translation.personalizedPrompts.default')
-                        : pattern.name}
-                    </Label>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent
-                className="flex flex-col gap-4 h-16 flex-1"
-                onClick={() => !isExportMode
-                  ? setCurrentPromptId(pattern.id)
-                  : setSelectedPrompts((prev) => {
-                      return prev.includes(pattern.id)
-                        ? prev.filter(id => id !== pattern.id)
-                        : [...prev, pattern.id]
-                    })}
-              >
-                <p className="text-sm text-ellipsis whitespace-pre-wrap line-clamp-3">{pattern.prompt}</p>
-              </CardContent>
-              <Separator />
-              <CardFooter className="w-full flex justify-between px-4 items-center">
-                <CardAction>
-                  {
-                    !isDefaultPrompt(pattern.id)
-                    && <DeletePrompt originPrompt={pattern} disabled={isExportMode} className="text-destructive" />
-                  }
-                </CardAction>
-                <CardAction>
-                  <ConfigurePrompt originPrompt={pattern} disabled={isExportMode} />
-                </CardAction>
-              </CardFooter>
-            </Card>
-          ))
-        }
-      </RadioGroup>
+      </div>
+      <PromptGrid
+        currentPromptId={currentPromptId}
+        setCurrentPromptId={setCurrentPromptId}
+      />
     </section>
+  )
+}
+
+function PromptGrid({
+  currentPromptId,
+  setCurrentPromptId,
+}: {
+  currentPromptId: string
+  setCurrentPromptId: (value: string) => void
+}) {
+  const [translateConfig] = useAtom(configFieldsAtomMap.translate)
+  const promptsConfig = translateConfig.promptsConfig
+  const patterns = promptsConfig.patterns
+  const [selectedPrompts, setSelectedPrompts] = useAtom(selectedPromptsToExportAtom)
+  const isExportMode = useAtomValue(isExportPromptModeAtom)
+
+  const handleCardClick = (pattern: typeof patterns[number]) => {
+    if (!isExportMode) {
+      setCurrentPromptId(pattern.id)
+    }
+    else if (!isDefaultPrompt(pattern.id)) {
+      setSelectedPrompts((prev) => {
+        return prev.includes(pattern.id)
+          ? prev.filter(id => id !== pattern.id)
+          : [...prev, pattern.id]
+      })
+    }
+  }
+
+  return (
+    <RadioGroup
+      value={currentPromptId}
+      onValueChange={value => setCurrentPromptId(value)}
+      aria-label={i18n.t('options.translation.personalizedPrompts.title')}
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-96 overflow-auto p-2 select-none"
+    >
+      {
+        patterns.map(pattern => (
+          <Card
+            className={cn(
+              'h-full gap-0 pb-2 pt-0',
+              // for highlight checked card in export mode
+              'has-[[aria-checked=true]]:border-primary has-[[aria-checked=true]]:bg-primary/5 dark:has-[[aria-checked=true]]:border-primary/70 dark:has-[[aria-checked=true]]:bg-primary/10',
+            )}
+            key={pattern.id}
+          >
+            <CardHeader
+              className="grid-rows-1 pt-4 px-4"
+              onClick={() => handleCardClick(pattern)}
+            >
+              <CardTitle className="w-full min-w-0">
+                <div className="leading-relaxed gap-3 flex items-center w-full">
+                  {isExportMode
+                    ? (
+                        !isDefaultPrompt(pattern.id) && (
+                          <Checkbox
+                            id={`translate-prompt-check-${pattern.id}`}
+                            checked={selectedPrompts.includes(pattern.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedPrompts((prev) => {
+                                return checked
+                                  ? [...prev, pattern.id]
+                                  : prev.filter(id => id !== pattern.id)
+                              })
+                            }}
+                          />
+                        )
+                      )
+                    : (
+                        <RadioGroupItem
+                          id={`translate-prompt-radio-${pattern.id}`}
+                          value={pattern.id}
+                        />
+                      )}
+
+                  <Label
+                    htmlFor={`translate-prompt-check-${isExportMode ? 'check' : 'radio'}-${pattern.id}`}
+                    className="flex-1 min-w-0 truncate"
+                    title={pattern.name}
+                  >
+                    {isDefaultPrompt(pattern.id)
+                      ? i18n.t('options.translation.personalizedPrompts.default')
+                      : pattern.name}
+                  </Label>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent
+              className="flex flex-col gap-4 h-16 flex-1 px-4"
+              onClick={() => handleCardClick(pattern)}
+            >
+              <p className="text-sm text-ellipsis whitespace-pre-wrap line-clamp-3">{pattern.prompt}</p>
+            </CardContent>
+            <Separator className="py-2" />
+            <CardFooter className="w-full flex justify-between px-4 items-center">
+              <CardAction>
+                {
+                  !isDefaultPrompt(pattern.id)
+                  && <DeletePrompt originPrompt={pattern} />
+                }
+              </CardAction>
+              <CardAction>
+                <ConfigurePrompt originPrompt={pattern} />
+              </CardAction>
+            </CardFooter>
+          </Card>
+        ))
+      }
+    </RadioGroup>
   )
 }
 
@@ -197,6 +224,7 @@ function ConfigurePrompt({
   className?: string
 } & React.ComponentProps<'button'>) {
   const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
+  const isExportMode = useAtomValue(isExportPromptModeAtom)
 
   const inEdit = !!originPrompt
 
@@ -244,7 +272,7 @@ function ConfigurePrompt({
         {
           inEdit
             ? (
-                <Button variant="ghost" className={cn('size-8', className)} {...props}>
+                <Button variant="ghost" className={cn('size-8', className)} disabled={isExportMode} {...props}>
                   <Icon icon="tabler:pencil" className="size-4" />
                 </Button>
               )

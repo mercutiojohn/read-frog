@@ -143,14 +143,14 @@ function PromptGrid({
         patterns.map(pattern => (
           <Card
             className={cn(
-              'h-full gap-0 pb-2 pt-0',
+              'h-full gap-0 pb-2 py-0',
               // for highlight checked card in export mode
               'has-[[aria-checked=true]]:border-primary has-[[aria-checked=true]]:bg-primary/5 dark:has-[[aria-checked=true]]:border-primary/70 dark:has-[[aria-checked=true]]:bg-primary/10',
             )}
             key={pattern.id}
           >
             <CardHeader
-              className="grid-rows-1 pt-4 px-4"
+              className="grid-rows-1 pt-4 px-4 mb-3"
               onClick={() => handleCardClick(pattern)}
             >
               <CardTitle className="w-full min-w-0">
@@ -191,13 +191,13 @@ function PromptGrid({
               </CardTitle>
             </CardHeader>
             <CardContent
-              className="flex flex-col gap-4 h-16 flex-1 px-4"
+              className="flex flex-col gap-4 h-16 flex-1 px-4 mb-3"
               onClick={() => handleCardClick(pattern)}
             >
               <p className="text-sm text-ellipsis whitespace-pre-wrap line-clamp-3">{pattern.prompt}</p>
             </CardContent>
-            <Separator className="py-2" />
-            <CardFooter className="w-full flex justify-between px-4 items-center">
+            <Separator className="my-0" />
+            <CardFooter className="w-full flex justify-between px-4 items-center py-2">
               <CardAction>
                 {
                   !isDefaultPrompt(pattern.id)

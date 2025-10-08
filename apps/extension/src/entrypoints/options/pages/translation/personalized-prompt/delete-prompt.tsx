@@ -3,9 +3,10 @@ import { i18n } from '#imports'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@repo/ui/components/alert-dialog'
 import { Button } from '@repo/ui/components/button'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { configFieldsAtomMap } from '@/utils/atoms/config'
 import { DEFAULT_TRANSLATE_PROMPT_ID } from '@/utils/constants/prompt'
+import { isExportPromptModeAtom } from './atoms'
 
 export function DeletePrompt({
   originPrompt,
@@ -15,6 +16,7 @@ export function DeletePrompt({
   originPrompt: TranslatePromptObj
   className?: string
 } & React.ComponentProps<'button'>) {
+  const isExportMode = useAtomValue(isExportPromptModeAtom)
   const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
   const { patterns, prompt } = translateConfig.promptsConfig
   const deletePrompt = () => {
@@ -30,7 +32,7 @@ export function DeletePrompt({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" className={className} {...props}>
+        <Button variant="ghost" size="icon" className={className} disabled={isExportMode} {...props}>
           <Icon icon="tabler:trash" className="size-4"></Icon>
         </Button>
       </AlertDialogTrigger>

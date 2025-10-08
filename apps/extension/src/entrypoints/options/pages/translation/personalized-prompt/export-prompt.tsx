@@ -1,22 +1,17 @@
 import { i18n } from '#imports'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { Button } from '@repo/ui/components/button'
-import { useAtomValue } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { configFieldsAtomMap } from '@/utils/atoms/config'
+import { isExportPromptModeAtom, selectedPromptsToExportAtom } from './atoms'
 import { downloadJSONFile } from './utils/prompt-file'
 
-export function ExportPrompts({
-  selectedPrompts,
-  setSelectedPrompts,
-  setIsExportMode,
-}: {
-  selectedPrompts: string[]
-  setSelectedPrompts: React.Dispatch<React.SetStateAction<string[]>>
-  setIsExportMode: React.Dispatch<React.SetStateAction<boolean>>
-}) {
+export function ExportPrompts() {
   const translateConfig = useAtomValue(configFieldsAtomMap.translate)
   const promptsConfig = translateConfig.promptsConfig
   const patterns = promptsConfig.patterns
+  const [selectedPrompts, setSelectedPrompts] = useAtom(selectedPromptsToExportAtom)
+  const [, setIsExportMode] = useAtom(isExportPromptModeAtom)
 
   const sortOutDownloadPrompts = patterns
     .filter(pattern => selectedPrompts.includes(pattern.id))

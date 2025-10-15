@@ -27,7 +27,7 @@ import {
 } from '@repo/ui/components/sheet'
 import { cn } from '@repo/ui/lib/utils'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { useState } from 'react'
+import { Activity, useState } from 'react'
 import { QuickInsertableTextarea } from '@/components/ui/insertable-textarea'
 import { configFieldsAtomMap } from '@/utils/atoms/config'
 import { DEFAULT_TRANSLATE_PROMPT_ID, getTokenCellText, TOKENS } from '@/utils/constants/prompt'
@@ -157,23 +157,19 @@ function PromptGrid({
             >
               <CardTitle className="w-full min-w-0">
                 <div className="leading-relaxed gap-3 flex items-center w-full h-5">
-                  {isExportMode
-                    ? (
-                        !isDefaultPrompt(pattern.id) && (
-                          <Checkbox
-                            id={`translate-prompt-check-${pattern.id}`}
-                            checked={selectedPrompts.includes(pattern.id)}
-                            onCheckedChange={(checked) => {
-                              setSelectedPrompts((prev) => {
-                                return checked
-                                  ? [...prev, pattern.id]
-                                  : prev.filter(id => id !== pattern.id)
-                              })
-                            }}
-                          />
-                        )
-                      )
-                    : <></>}
+                  <Activity mode={isExportMode && !isDefaultPrompt(pattern.id) ? 'visible' : 'hidden'}>
+                    <Checkbox
+                      id={`translate-prompt-check-${pattern.id}`}
+                      checked={selectedPrompts.includes(pattern.id)}
+                      onCheckedChange={(checked) => {
+                        setSelectedPrompts((prev) => {
+                          return checked
+                            ? [...prev, pattern.id]
+                            : prev.filter(id => id !== pattern.id)
+                        })
+                      }}
+                    />
+                  </Activity>
                   <Label
                     htmlFor={`translate-prompt-check-${isExportMode ? 'check' : 'radio'}-${pattern.id}`}
                     className="flex-1 min-w-0 block truncate cursor-pointer"
@@ -183,13 +179,11 @@ function PromptGrid({
                       ? i18n.t('options.translation.personalizedPrompts.default')
                       : pattern.name}
                   </Label>
-                  {
-                    currentPromptId === pattern.id && (
-                      <Badge className="bg-primary">
-                        {i18n.t('options.translation.personalizedPrompts.current')}
-                      </Badge>
-                    )
-                  }
+                  <Activity mode={currentPromptId === pattern.id ? 'visible' : 'hidden'}>
+                    <Badge className="bg-primary">
+                      {i18n.t('options.translation.personalizedPrompts.current')}
+                    </Badge>
+                  </Activity>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -202,10 +196,9 @@ function PromptGrid({
             <Separator className="my-0" />
             <CardFooter className="w-full flex justify-between px-4 items-center py-2">
               <CardAction>
-                {
-                  !isDefaultPrompt(pattern.id)
-                  && <DeletePrompt originPrompt={pattern} />
-                }
+                <Activity mode={!isDefaultPrompt(pattern.id) ? 'visible' : 'hidden'}>
+                  <DeletePrompt originPrompt={pattern} />
+                </Activity>
               </CardAction>
               <CardAction>
                 <ConfigurePrompt originPrompt={pattern} />

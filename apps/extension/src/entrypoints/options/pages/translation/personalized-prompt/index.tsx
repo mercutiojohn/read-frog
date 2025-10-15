@@ -1,6 +1,7 @@
 import type { TranslatePromptObj } from '@/types/config/translate'
 import { i18n } from '#imports'
-import { Icon } from '@iconify/react/dist/iconify.js'
+import { Icon } from '@iconify/react'
+import { Badge } from '@repo/ui/components/badge'
 import { Button } from '@repo/ui/components/button'
 import {
   Card,
@@ -13,7 +14,7 @@ import {
 import { Checkbox } from '@repo/ui/components/checkbox'
 import { Input } from '@repo/ui/components/input'
 import { Label } from '@repo/ui/components/label'
-import { RadioGroup, RadioGroupItem } from '@repo/ui/components/radio-group'
+import { RadioGroup } from '@repo/ui/components/radio-group'
 import { Separator } from '@repo/ui/components/separator'
 import {
   Sheet,
@@ -25,12 +26,13 @@ import {
   SheetTrigger,
 } from '@repo/ui/components/sheet'
 import { cn } from '@repo/ui/lib/utils'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useState } from 'react'
 import { QuickInsertableTextarea } from '@/components/ui/insertable-textarea'
-import { configFieldsAtomMap, isExportPromptModeAtom, selectedPromptsToExportAtom } from '@/utils/atoms/config'
+import { configFieldsAtomMap } from '@/utils/atoms/config'
 import { DEFAULT_TRANSLATE_PROMPT_ID, getTokenCellText, TOKENS } from '@/utils/constants/prompt'
 import { ConfigCard } from '../../../components/config-card'
+import { isExportPromptModeAtom, selectedPromptsToExportAtom } from './atoms'
 import { DeletePrompt } from './delete-prompt'
 import { ExportPrompts } from './export-prompt'
 import { ImportPrompts } from './import-prompt'
@@ -49,7 +51,7 @@ function PromptList() {
   const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
   const promptsConfig = translateConfig.promptsConfig
   const patterns = promptsConfig.patterns
-  const [_, setSelectedPrompts] = useAtom(selectedPromptsToExportAtom)
+  const setSelectedPrompts = useSetAtom(selectedPromptsToExportAtom)
   const [isExportMode, setIsExportMode] = useAtom(isExportPromptModeAtom)
   const currentPromptId = promptsConfig.prompt
 
@@ -143,9 +145,9 @@ function PromptGrid({
         patterns.map(pattern => (
           <Card
             className={cn(
-              'h-full gap-0 pb-2 py-0',
+              'h-full gap-0 pb-2 py-0 cursor-pointer hover:scale-[1.02] transition-transform duration-30 ease-in-out',
               // for highlight checked card in export mode
-              'has-[[aria-checked=true]]:border-primary has-[[aria-checked=true]]:bg-primary/5 dark:has-[[aria-checked=true]]:border-primary/70 dark:has-[[aria-checked=true]]:bg-primary/10',
+              isExportMode ? 'has-[[aria-checked=true]]:border-primary has-[[aria-checked=true]]:bg-primary/5 dark:has-[[aria-checked=true]]:border-primary/70 dark:has-[[aria-checked=true]]:bg-primary/10' : '',
             )}
             key={pattern.id}
           >
@@ -154,7 +156,7 @@ function PromptGrid({
               onClick={() => handleCardClick(pattern)}
             >
               <CardTitle className="w-full min-w-0">
-                <div className="leading-relaxed gap-3 flex items-center w-full">
+                <div className="leading-relaxed gap-3 flex items-center w-full h-5">
                   {isExportMode
                     ? (
                         !isDefaultPrompt(pattern.id) && (
@@ -171,22 +173,23 @@ function PromptGrid({
                           />
                         )
                       )
-                    : (
-                        <RadioGroupItem
-                          id={`translate-prompt-radio-${pattern.id}`}
-                          value={pattern.id}
-                        />
-                      )}
-
+                    : <></>}
                   <Label
                     htmlFor={`translate-prompt-check-${isExportMode ? 'check' : 'radio'}-${pattern.id}`}
-                    className="flex-1 min-w-0 truncate"
+                    className="flex-1 min-w-0 block truncate cursor-pointer"
                     title={pattern.name}
                   >
                     {isDefaultPrompt(pattern.id)
                       ? i18n.t('options.translation.personalizedPrompts.default')
                       : pattern.name}
                   </Label>
+                  {
+                    currentPromptId === pattern.id && (
+                      <Badge className="bg-primary">
+                        {i18n.t('options.translation.personalizedPrompts.current')}
+                      </Badge>
+                    )
+                  }
                 </div>
               </CardTitle>
             </CardHeader>

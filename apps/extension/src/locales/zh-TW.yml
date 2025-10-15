@@ -188,6 +188,7 @@ options:
       importSuccess: 導入成功
       import: 導入
       export: 導出
+      current: 正在使用
       editPrompt:
         title: 編輯 Prompt
         name: 標題

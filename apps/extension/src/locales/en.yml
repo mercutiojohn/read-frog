@@ -188,6 +188,7 @@ options:
       importSuccess: Import Success
       import: Import
       export: Export
+      current: in use
       editPrompt:
         title: Edit Prompt
         name: Name

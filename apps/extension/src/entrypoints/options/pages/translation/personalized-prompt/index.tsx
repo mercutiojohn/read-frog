@@ -14,7 +14,6 @@ import {
 import { Checkbox } from '@repo/ui/components/checkbox'
 import { Input } from '@repo/ui/components/input'
 import { Label } from '@repo/ui/components/label'
-import { RadioGroup } from '@repo/ui/components/radio-group'
 import { Separator } from '@repo/ui/components/separator'
 import {
   Sheet,
@@ -135,9 +134,7 @@ function PromptGrid({
   }
 
   return (
-    <RadioGroup
-      value={currentPromptId}
-      onValueChange={value => setCurrentPromptId(value)}
+    <div
       aria-label={i18n.t('options.translation.personalizedPrompts.title')}
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-96 overflow-auto p-2 select-none"
     >
@@ -194,7 +191,7 @@ function PromptGrid({
               <p className="text-sm text-ellipsis whitespace-pre-wrap line-clamp-3">{pattern.prompt}</p>
             </CardContent>
             <Separator className="my-0" />
-            <CardFooter className="w-full flex justify-between px-4 items-center py-2">
+            <CardFooter className="w-full flex justify-between px-4 items-center py-2 cursor-default">
               <CardAction>
                 <Activity mode={!isDefaultPrompt(pattern.id) ? 'visible' : 'hidden'}>
                   <DeletePrompt originPrompt={pattern} />
@@ -207,7 +204,7 @@ function PromptGrid({
           </Card>
         ))
       }
-    </RadioGroup>
+    </div>
   )
 }
 
